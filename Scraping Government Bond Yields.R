@@ -55,5 +55,5 @@ write_xlsx(rownames_to_column(sa.gov.yld.ds, var = "Date"),
            "C:/Users/lenovo/OneDrive/Documents/SA_Bonds.xlsx")
 
 #Attempting to convert data to access
-#uhm <- odbcConnect("C:/Users/lenovo/OneDrive/Documents/SA_Bonds.accdb")
-#sqlSave(uhm, sa.gov.yld.ds)
+uhm2 <- odbcConnectAccess2007("C:/Users/lenovo/OneDrive/Documents/Int_Bonds_Data.accdb")
+sqlSave(uhm2, crnt.yld, "SA_Bonds", append = TRUE) #access will receive the latest bond yields only while the excel doc is updated using the whole bond yield database that is on R.

@@ -1,0 +1,365 @@
+---
+title: "Portfolio Optimization Algorithm"
+author: "Kgosi Modisane"
+date: "2024-03-23"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Constructing A Portfolio Optimization Algorithm {.tabset .tabset-fade .tabset-pills}
+
+In this report, the reader will be taken down the necessary procedures that take place when attempting to create an optimal investment portfolio using RStudio. Creating an optimal asset portfolio would mean choosing the correct combination of assets that will maximize an investor's return for a given level of risk or minimize the level of risk for a given target return. To achieve this, the assets in the portfolio would need to be well-diversified so that the impact of the under-performance of one of the assets does not significantly impact the overall portfolio. Thus, one's investment is not heavily reliant on the performance of any one asset.
+
+## Packages
+
+We start off by loading the necessary packages. If the below packages are not a part of your library then you will first need to install these packages using the `install.packages()` function where you will insert the name of the package that you would like to install within the parenthesis.
+
+```{R, message = FALSE}
+library(tidyverse) #used for data manipulation
+library(PerformanceAnalytics) #A collection of econometric functions for performance and risk analysis.
+library(quantmod) #Specify, build, trade, and analyse quantitative financial trading strategies.
+library(fPortfolio) #A collection of functions to optimize portfolios and to analyze them from different points of view.
+library(kableExtra) #construct complex table with 'kable' and pipe syntax
+library(stargazer) #well formatted regression and *summary statistics tables*
+library(gt) #Easily create presentation-ready display tables
+
+```
+
+## Pulling Financial Data
+
+To get started, we would need to pull financial securities data from a source. Preferably, we would like to pull data from a very reliable source like Bloomberg or Iress but due to constraints we will source our data from Yahoo Finance. The quantmod package helps us get the relevant information without too much hassle using `getSymbols`.
+
+```{R, warning = FALSE, message = FALSE}
+getSymbols(c("STX500.JO", "STX40.JO", "STXNDQ.JO", "STXEMG.JO", 
+             "SYGWD.JO", "PPE.JO", "SDO.JO", "ARKK", "CPI.JO",
+             "BTC-USD", "ETH-USD", "UNI7083-USD", "PAH3.DE","COH.JO"), 
+           from = Sys.Date()-380,
+           to = Sys.Date())
+
+getSymbols(c("ZAR=X", "EURZAR=X"), 
+           from = Sys.Date()-380,
+           to = Sys.Date())
+```
+
+Explain that the tail of our assets will typically look like this following OHLC - Open, High, Low, Close formatting. Also explain the shape of foreign exchange currency and the need of such for this project.
+
+The asset data pulled from yahoo finance is typically displayed in a table using OHLC formatting where Open, High, Low and Closing data is disclosed at the end of each trading day.
+
+```{R}
+kable(tail(CPI.JO), align = 'c')
+
+kable(tail(`ZAR=X`), align = 'c')
+```
+
+## Constructing our Portfolio
+
+Currently, our portfolio consists of ETFs, US stocks, German stocks, South African stocks as well as cryptocurrencies listed as follows: 
+
+  * Satrix S&P 500 ETF 
+  * Satrix 40 ETF 
+  * Satrix Nasdaq 100 Feeder Portfolio 
+  * Satrix MSCI Emerged Markets ESG Enhanced ETF
+  * Sygnia ITRIX MSCI World 
+  * Porsche Automobil Holding SE 
+  * Capitec Bank Holdings Limited 
+  * Purple Group Limited 
+  * Stadio Holdings Limited 
+  * Curro Holdings Limited 
+  * ARK Innovation ETF 
+  * Bitcoin (USD)
+  * Ethereum (USD) 
+  * Uniswap (USD)
+
+To optimise our portfolio, we will need to combine all price data into one data set, remove all NAs in the data (i.e., all the missing data points in the data set) and then calculate the daily price returns. The data set with price data will be labelled 'portf' while the returns data set will be labelled as 'rportf'.
+
+**Disclaimer:** The assets in the portfolio act as an example and do not constitute investment advice nor is it representative of the author's investment portfolio.
+
+```{R}
+portf <- cbind(STX500.JO$STX500.JO.Adjusted, STX40.JO$STX40.JO.Adjusted, 
+               STXNDQ.JO$STXNDQ.JO.Adjusted, STXEMG.JO$STXEMG.JO.Adjusted, 
+               SYGWD.JO$SYGWD.JO.Adjusted, PAH3.DE$PAH3.DE.Adjusted, 
+               CPI.JO$CPI.JO.Adjusted, PPE.JO$PPE.JO.Adjusted, 
+               SDO.JO$SDO.JO.Adjusted, COH.JO$COH.JO.Adjusted, 
+               ARKK$ARKK.Adjusted,
+               `BTC-USD`$`BTC-USD.Adjusted`, `ETH-USD`$`ETH-USD.Adjusted`, 
+               `UNI7083-USD`$`UNI7083-USD.Adjusted`)
+
+colnames(portf) <- c("STX500", "STX40", "STX100", "STXEMG", "SYGWD", "PAH3", 
+                     "CPI", "PPE", "SDO", "COH", "ARKK", "BTC", "ETH", "UNI")
+
+portf <- na.omit(portf)
+
+rportf <- Return.calculate(portf, method = "discrete")
+
+rportf <- na.omit(rportf) 
+
+kable(tail(round(rportf), 6), align = 'c')
+```
+
+## Price and return plots
+
+### Asset Price Performance
+
+Before optimising our portfolio, we want to first get a good idea of what our data set looks like. This gives us a good idea of what to expect when going through with our calculations. As a first, we can have a look at a time series chart of our assets' prices over time. Due to space constraints we will only have a look at the Satrix 500, Porsche SE, Capitec, and Bitcoin asset prices. These assets should are for the most part unrelated (they track performances in different countries and industries) and thus will give us a better understanding of what the overall portfolio looks like.
+
+```{R}
+
+chartSeries(STX500.JO)
+chartSeries(PAH3.DE)
+chartSeries(CPI.JO)
+chartSeries(`BTC-USD`)
+
+```
+
+The above asset prices seem to follow a standard price performance although Bitcoin can be seen to have large movements in its price, particularly around the beginning of March 2023 and then later on in March 2024. The large transaction volumes may support the idea that Bitcoin may have a significant standard deviation throughout this time period. Additionally, any large return calculated from Bitcoin can be expected through its recent out-performance in the first quarter of 2024.
+
+### Summary Statistics
+
+Next, we can look at the summary statistics of our return portfolio. After observing the summary statistics below, can be fairly confident that all assets in the portfolio follow a normal distribution with daily return figures being distributed around a mean of 0%. This can be further supported by the close proximity between the mean and median values of the respective assets. Additionally, the median return values of the assets are well contained with the 1st and 3rd quartiles of the assets' respective return distributions. What is striking, however, is the massive differences in the size of the maximum returns versus the size of the minimum returns for a few of the assets. For example, Capitec (CPI), Bitcoin (BTC) and Ethereum (ETH) have maximum returns that are roughly twice the size of their minimum returns in absolute terms. Uniswap (UNI) displays a maximum return that is 5 times the size of its minimum return in absolute terms. This observation shows positive tail events supporting the idea that the data may be skewed. \*check if median \> mean for all assets and focus on the 4 assets mentioned above.
+Interestingly, the median values for the above mentioned assets are all smaller than their respective mean values indicating that the assets' distribution may be slightly skewed to the left (negatively skewed).
+This may especially be the case for crypto assets.
+
+```{R}
+
+kable(summary(rportf*100), align = 'c', caption= "Summary of Portfolio Returns (In %)") %>%
+  kable_styling(bootstrap_options = "hover") %>%
+  scroll_box(width = "1000px")
+
+```
+
+### Return Distributions
+
+In this section, we would like to look at the general distributions in the returns of the assets in our portfolio. The return distributions below will give us a good visual representation of the above summary statistics and support the analysis made above.
+
+```{R, Warning = FALSE}
+
+c <- c("BTC" = "gold", "CPI" = "red", "PAH3" = "green", "STX500" = "blue")
+
+ggplot(data = rportf) + 
+  geom_density(mapping = aes(rportf$STX500, color = "STX500"), fill = "blue", alpha = 0.1, size = 0.75) +
+  geom_density(mapping = aes(rportf$PAH3, color = "PAH3"), fill = "green", alpha = 0.1, size = 0.75) +
+  geom_density(mapping = aes(rportf$CPI, color = "CPI"), fill = "red", alpha = 0.1, size = 0.75) +
+  geom_density(mapping = aes(rportf$BTC, color = "BTC"), fill = "gold", alpha = 0.1, size = 0.75) +
+  scale_color_manual(values = c, guide = guide_legend(override.aes = list(fill = c))) +
+  xlim(-0.1, 0.2) +
+  labs(x = "Portfolio Returns", y = "Distribution", color = "Legend") + 
+  theme_classic()
+
+```
+
+Apart from the STX500 ETF, most assets seem to be normally distributed around a 0% average return wiht the Porsche SE asset being more leptokurtic and Bitcoin being rather platykurtic. Although the data is well distributed around the mean (zero) within one standard deviation, there tends to be a tail end towards the positive end of the distribution representing significantly high daily return observations. Particularly for Capitec and Bitcoin.
+
+The STX500 ETF seems to follow a bimodal distribution in its returns. This could simply be a coincidence with this specific sample or it could, at best, be described by a hidden state process following [a Markov Chain which produces a mixed Gaussian probability of stock returns](https://doi.org/10.1007/s11071-021-06566-1).
+
+```{R}
+
+EW_port_ret <- (rportf$STX500 + rportf$STX40 + rportf$STX100 + rportf$STXEMG + rportf$SYGWD + rportf$PAH3 + rportf$CPI + rportf$PPE + rportf$SDO + rportf$COH + rportf$ARKK + rportf$BTC + rportf$ETH + rportf$UNI)/14
+
+ggplot(EW_port_ret) +
+  geom_density(mapping = aes(EW_port_ret), color = "grey", fill = "grey", alpha = 0.1, size = 0.75) +
+  xlim(-0.1, 0.2) +
+  theme_classic()
+
+```
+
+The above plot shows the distribution of the entire portfolio assuming that each asset has an equal weighting in the portfolio. The graph is represented in the same scale as the previous for ease of comparison.
+The plot displays a relatively normal distribution of the portfolio's aggregated return with no signs of any notable tail events in the distribution.
+
+The plot below shows the same distribution, although fit to scale. This gives us a close-up of the distribution. With this plot we can further support a normal distribution as the best fit to describe the overall portfolio's returns, although there may be evidence to support a bimodal distribution structure.
+
+```{R, Warning = FALSE}
+
+ggplot(EW_port_ret) +
+  geom_density(mapping = aes(EW_port_ret), color = "grey", fill = "grey", alpha = 0.1, size = 0.75) +
+  theme_classic()
+
+```
+
+### Correlations
+
+In this section, we would like to observe the correlations between assets. In other words, we would like to assess the strength of the relationship between any two assets in the portfolio. Generally, if two assets' returns move in the same direction over time they are said to be positively correlated and if they move in opposite directions then they are said to be negatively correlated. Negatively correlated assets may help investors hedge against significant losses in their portfolio since the under-performance of one asset can be offset by another assets good performance. Intuitively, any two assets that are positively correlated will experience profits at the same time and losses will be amplified during bad spells. This emphasises the importance of diversification as a tool to protect investors portfolios for significant loss.
+
+```{R}
+corr <- cor(rportf)
+
+corr %>%
+  as.data.frame() %>%
+  round(4) %>%
+  gt(rownames_to_stub = TRUE) %>%
+  tab_header(
+    title = "Correlation of Assets in the Portfolio",
+    subtitle = "As of 16/04/2024" #see if you can write a code to always give current date. i.e, "As of " + Sys.Date()
+  ) %>%
+    data_color(
+    columns = c("STX500", "STX40", "STX100", "STXEMG", "SYGWD", "PAH3", 
+                     "CPI", "PPE", "SDO", "COH", "ARKK", "BTC", "ETH", "UNI"),
+    fn = scales::col_numeric(
+      palette = c("blue", "grey","white", "orange", "red"),
+      domain = c(-1.0, -0.5, 0.0, 0.5, 1.0)
+    ),
+    apply_to = "fill"
+  ) %>%
+  cols_align(
+    align = "center",
+    columns = everything()
+  )
+
+```
+
+The above table shows a correlation table ranging from -1 to +1, where -1 reflects perfectly negatively correlation between any two assets (represented with a blue coloured cell) and +1 reflects perfectly positively correlation between any two assets (represented with a red coloured cell). By this logic, any asset will have a perfectly positive correlation with itself. In the table we can see a mild to strong positive correlation between the STX50, STX100, STXEMG and SYGWD ETFs. 
+The same observation can be seen between BTC, ETH and UNI (i.e., the cryptocurrencies). Thus, we can expect relatively low weightings assigned to most of the assets since their performance can be explained by at least one of the assets. Interestingly, no mild to strong negative correlations can be seen between any of the assets in the portfolio. Thus, the portfolio selection may need to be revised to include assets that have stronger negative relationships with the rest of the portfolio.
+
+### Portfolio Mean and Variances
+
+In this section we look at different measurements of the average return and risk of the portfolio as well as the assets in the portfolio. This could give us a better idea of the average performance of the portfolio assuming equal weights assigned to each asset. We will also be able to pick up on any outliers in terms of both risk and return.
+
+```{R}
+asset_mean <- as.data.frame(lapply(rportf, mean)) #individual asset returns 
+annualised_mean <- asset_mean*252 #asset returns on an annualised basis
+
+ag.mean <- mean.geometric(rportf) #geometric mean return for each asset in the portfolio
+aag.mean <- ag.mean*252 #annualised geometric mean return for each asset in the portfolio
+
+asset_sd <- as.data.frame(lapply(rportf, sd))
+annualised_sd <- asset_sd*sqrt(252)
+
+ave.p.ret. <- mean(aag.mean) #Average equally-weighted portfolio geometric return
+ave.p.sd <- mean(t(annualised_sd))
+
+kable(round(annualised_mean, 2), align = 'c', caption = "Arithmetic Returns")
+kable(round(aag.mean, 2), align = 'c', caption = "Geometric Returns")
+kable(round(annualised_sd, 4), align = 'c', caption = "Arithmetic Risk Levels")
+```
+
+The geometric returns in the table above show some interesting results including very high returns from the cryptocurrencies. Notably, Bitcoin has delivered an annual return of over 100%. On the other end of the spectrum, is Purple Group which has delivered a loss of 71% for the trailing 12-months. Out of the ETFs, the Nasdaq 100 has delivered an impressive performance of 45% for the past year.
+
+From a risk perspective, the ETFs really stand out giving the lowest risk levels out of the bunch. The riskiest listed company in the portfolio for the past year seems to be purple group with a significant annualised standard deviation of 64,52%. The cryptocurrencies also display large levels of risk for the past year which meets expectations regarding the nature of the assets.
+
+```{R}
+ave.p.ret. #Overall Portfolio Return (Assuming equal weights)
+ave.p.sd #Overall Portfolio Risk (Assuming equal weights)
+```
+
+If we assume that we have invested equal amounts of money into every single asset in our portfolio for the past year and calculate the portfolio's return and standard deviation for the year we would get a return of 27,91% and a standard deviation of 36,69%. This record is helpful when it comes to understanding what the return and risk objectives would look like when attempting to optimise our portfolio. In other words, after optimising our portfolio we should either have a larger annual return for the same level of risk, or a lower level of risk for the same target return, or both. Lastly, the annual return for the portfolio can be seen to be lower than the annual standard deviation. This implies that any person invested in this portfolio in this moment in time is taking on a lot of risk for their expected returnand may need to revise their portfolio selection process.
+
+### Sharpe Ratio
+
+As a final part of our statistical analysis, we would like to look at the Sharpe Ratios of the assets in our portfolio. The sharpe ratio can be expressed as: \$SR = (R<sub>i</sub>-R<sub>f</sub>)/sigma<sub>i</sub>\$. Essentially, we want to find out how much return does each asset produce for a given level of risk. The risk free rate (R<sub>f</sub>) will be omitted in this case for simplification.
+
+The standouts from this exercise are S&P 500, the Nasdaq 100, the Sygnia World ETF, and Bitcoin with sharpe ratios around 2 indicating that for each unit of risk the assets will produce a positive return of around 2%. These assets can be expected to dominate the portfolio.
+
+```{R}
+
+SR <- aag.mean/annualised_sd
+
+kable(round(SR, 2), align = 'c', caption = "Sharpe Ratios")
+
+```
+
+## Constraints
+
+To create an optimal portfolio that suits our needs, we will need to provide constraints to the optimisation algorithm. In this case we will set a target return that is 58% above the average portfolio return assuming equal weights (which was calculated in the "Portfolio Mean and Variance" section above). Additionally, we will add three constraints being that the assets in the portfolio should be only be in Long Positions (i.e., we will only have the intention to invest in the assets in our portfolio and not borrow assets in an attempt to return them at a lower price which involves being in a Short Position). The second and third constraint is that the minimum weight that can be applied to an asset is 0% and the maximum weight that can be applied to an asset is 100%. The second constraint has a similar intuition to the first and the third constraint is to prevent the investor from borrowing cash to invest more money into an asset than their original capital allocation allows. After running our algorithm we get the following results:
+
+```{R}
+rportf_ts <- as.timeSeries(rportf)
+
+p_spec <- portfolioSpec()
+setTargetReturn(p_spec) <- mean(ag.mean)*1.58
+
+# mean target implies 50% above average portf. return
+
+defaultConstraints <- portfolioConstraints(rportf_ts, spec = p_spec, constraints = c("LongOnly", "minW = 0", "maxW = 1"))
+
+tgtportfolio <- efficientPortfolio(rportf_ts, spec = p_spec, constraints = c("LongOnly", "minW = 0", "maxW = 1"))
+
+summary(tgtportfolio)
+```
+
+Next, we would like to tabulate the optimal weights for additional computation. The results that can be seen in the above graph and the table below are consistent with what we would have expected after revising the nature of our data.
+
+```{R}
+#getting the target weights
+
+tgtweights <- getWeights(tgtportfolio) %>%
+  t() %>%
+  as.data.frame()
+
+kable(round(tgtweights, 4), align = 'c', caption = "Optimal Portfolio Weights")
+```
+
+## Current Portfolio
+
+In this section, we will construct what a typical investor's portfolio would look like had they been invested in a portfolio with similar assets. For example, the investor is currently holding one share in Capitec and 0.0162 in fractional shares.
+
+```{R}
+crnt_price <- tail(portf, n = 1)
+
+holdings <- t(c(1.7310, 0.1438, 6.0671, 12.2809, 17.492, 0, 1.0162, 10,
+                41.9793, 5.0359, 0, 0.00001, 0, 0.44866))
+colnames(holdings) <- c("STX500", "STX40", "STX100", "STXEMG", "MSCI", "PAH3",  
+                        "CPI", "PPE", "SDO", "COH","ARKK", "BTC", "ETH", "UNI")
+                        
+kable(holdings, align = 'c', caption = "Current Portfolio Holding")                        
+```
+
+### Converting foreign-denominated assets to ZAR
+
+Because we hold assets that are denominated in foreign currencies, it is important to convert all asset-prices into South African Rands. Since the investor has exposure to Germany and the U.S., the closing prices of the Euro:Rand and Dollar:Rand are used to convert the necessary assets to Rands. We will then sum up the total value of the portfolio in Rands before calculating the current weights associated with each asset.
+
+```{R}
+unadj_stock_values <- crnt_price*holdings
+
+EUR.ZAR <- `EURZAR=X`$`EURZAR=X.Adjusted`*100
+USD.ZAR <- `ZAR=X`$`ZAR=X.Adjusted`*100
+
+stock_values <- unadj_stock_values
+stock_values$PAH3 <- unadj_stock_values$PAH3*EUR.ZAR
+stock_values$ARKK <- unadj_stock_values$ARKK*USD.ZAR
+stock_values$BTC <- unadj_stock_values$BTC*USD.ZAR
+stock_values$ETH <- unadj_stock_values$ETH*USD.ZAR
+stock_values$UNI <- unadj_stock_values$UNI*USD.ZAR
+
+stock_values <- stock_values/100 #converts stocks from cents to rands
+
+Ttl_value <- sum(stock_values)
+act_wts <- stock_values/Ttl_value
+
+kable(round(act_wts, 4), align = 'c', caption = "Current Portfolio Weights")
+```
+
+## Creating Buy or Sell signals
+
+As a final step of the whole process, we are going to compare the target weights (as suggested by the optimisation algorithm) to the current weights of the portfolio in an attempt to determine whether we should buy more of a certain asset or if we should sell more of certain asset in order for the current portfolio weights to match the optimal portfolio weight.
+
+```{R}
+buy.sell_dec <- as.data.frame(tgtweights)-as.data.frame(act_wts) # if values are positive buy, if negative sell.
+
+#current stock price converted to ZAR calculation
+
+crnt_stck_prices <- crnt_price
+
+crnt_stck_prices$PAH3 <- crnt_price$PAH3*EUR.ZAR
+crnt_stck_prices$ARKK <- crnt_price$ARKK*USD.ZAR
+crnt_stck_prices$BTC <- crnt_price$BTC*USD.ZAR
+crnt_stck_prices$ETH <- crnt_price$ETH*USD.ZAR
+crnt_stck_prices$UNI <- crnt_price$UNI*USD.ZAR
+
+crnt_stck_prices <- crnt_stck_prices/100
+
+buy.sell_units <- round((buy.sell_dec*Ttl_value)/as.data.frame(crnt_stck_prices), 2)
+indicator <- ifelse(as.data.frame(buy.sell_units) > 0.00, "BUY", 
+                    ifelse(as.data.frame(buy.sell_units) < 0.00, "SELL", "HOLD"))
+
+row.names(indicator) <- 1
+row.names(buy.sell_units) <- 2
+
+p.overview <- rbind(as.data.frame(indicator), as.data.frame(buy.sell_units))
+
+kable(p.overview, align = 'c' , caption = "The Investment Decision")
+```
+
+The values in the above table will show the investor how many shares/units of each asset the investor should buy or sell in order to adjust their current portfolio weights the to target portfolio weights. All positive values will be associated with a cell labelled "BUY" and negative values will be associated with a cell labelled "SELL".
+
+In this rerport, we have gone through the necessary steps needed to create an optimal portfolio that could allow an investor to reach his/her return target for the year with the lowest amount of exposure to market risk. It is, however, important to explain that the optimisation algorithm only provides a reasonable estimation of what to expect in the short and long-run but it doesn't guarantee future performance and should not be the sole decision-making tool that an investor uses. As always, due dilligence should be applied.

@@ -7,12 +7,12 @@ library(fPortfolio)
 getSymbols(c("STX500.JO", "STX40.JO", "STXNDQ.JO", "STXEMG.JO", 
              "SYGWD.JO", "PPE.JO", "SDO.JO", "ARKK", "RIVN", "CPI.JO",
              "BTC-USD", "ETH-USD", "UNI7083-USD", "PAH3.DE","COH.JO"), 
-           from = Sys.Date()-380,
-           to = Sys.Date())
+           from = Sys.Date()-381,
+           to = Sys.Date()-1)
 
 getSymbols(c("ZAR=X", "EURZAR=X"), 
-           from = Sys.Date()-380,
-           to = Sys.Date())
+           from = Sys.Date()-381,
+           to = Sys.Date()-1)
 
 portf <- cbind(STX500.JO$STX500.JO.Adjusted, STX40.JO$STX40.JO.Adjusted, 
                STXNDQ.JO$STXNDQ.JO.Adjusted, STXEMG.JO$STXEMG.JO.Adjusted, 

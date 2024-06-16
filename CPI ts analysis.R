@@ -99,3 +99,81 @@ ggplot(as.data.frame(ttl_indexed_performance)) +
   geom_line(mapping = aes(x = index(SA_Bank_Index), y = Index), col = "black") + 
   labs(title = "Return Performance for the Banking Industry", x = "Time", y = "Return") +
   theme_classic() #CPI and FSR accounting for 48% of the market has reduced the performance of the banking industry
+
+# US TREASURY
+
+getSymbols("^FVX",
+           from = Sys.Date()-740, 
+           to = Sys.Date())
+
+Treasury <- FVX$FVX.Adjusted/100 #dividing by 100 converts yield to decimals thus reflecting percentages
+
+# SA BOND INDEX
+
+getSymbols("STXGOV.JO", 
+           from = Sys.Date()-740, 
+           to = Sys.Date())
+
+GovBond <- STXGOV.JO$STXGOV.JO.Adjusted
+
+GovBond_ret <- na.omit(
+  Return.calculate(
+    na.omit(GovBond)
+  )
+)
+
+# MARKET INDICES
+# JSE Top40, S&P, Nasdaq, and eurstoxx50 and stoxx europe 600
+
+getSymbols(c("^J200.JO", "^GSPC", "^NDX", "^STOXX50E", "^STOXX"),
+           from = Sys.Date()-740,
+           to = Sys.Date())
+
+M_Indices <- cbind(J200.JO$J200.JO.Adjusted, GSPC$GSPC.Adjusted, NDX$NDX.Adjusted,
+                   STOXX50E$STOXX50E.Adjusted, STOXX$STOXX.Adjusted)
+
+M_Ind_ret <- na.omit(
+  Return.calculate(
+    na.omit(M_Indices)
+  )
+)
+
+# REAL ESTATE
+
+getSymbols(c("^J805.JO"), 
+           from = Sys.Date() - 740,
+           to = Sys.Date())
+
+REIT <- J805.JO$J805.JO.Adjusted
+
+REIT_ret <- na.omit(
+  Return.calculate(
+    na.omit(REIT)
+  )
+)
+
+SA_RE_Mkt_Cap <- read_excel("SA Banks Market Cap.xlsx", 
+                            sheet = "Real Estate")
+colnames(SA_RE_Mkt_Cap) <- c("GRT", "RDF", "FFB", "RES", "VKE", "HYP", "ATT", "SSS",
+                             "SAC", "EMI", "ACS", "OCT", "SAR", "BWN", "APF", "TEX", 
+                             "TMT", "PPR", "DIB")
+
+SA_RE_Mkt_Share <- SA_RE_Mkt_Cap/sum(SA_RE_Mkt_Cap)
+
+# AUTOMOBILE INDUSTRY
+# Not Applicable due to frequency mismatch
+# Vehicle sales would be a great proxy although this info is given monthly
+
+# RETAILERS INDEX
+
+getSymbols("^JS4041.JO", 
+           from = Sys.Date()-740,
+           to = Sys.Date())
+
+Retail <- JS4041.JO$JS4041.JO.Adjusted
+
+Ret_ret <- na.omit(
+  Return.calculate(
+    na.omit(Retail)
+  )
+)

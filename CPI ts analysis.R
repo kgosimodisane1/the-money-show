@@ -160,6 +160,55 @@ colnames(SA_RE_Mkt_Cap) <- c("GRT", "RDF", "FFB", "RES", "VKE", "HYP", "ATT", "S
 
 SA_RE_Mkt_Share <- SA_RE_Mkt_Cap/sum(SA_RE_Mkt_Cap)
 
+getSymbols(c("GRT.JO", "RDF.JO", "FFB.JO", "RES.JO", "VKE.JO", "HYP.JO", "ATT.JO", 
+             "SSS.JO", "SAC.JO", "EMI.JO","ACS.JO", "OCT.JO", "SAR.JO", "BWN.JO", 
+             "APF.JO", "TEX.JO", "TMT.JO", "PPR.JO", "DIB.JO"),
+           from = Sys.Date() - 740,
+           to = Sys.Date())
+
+RE_Prices <- cbind(GRT.JO$GRT.JO.Adjusted, RDF.JO$RDF.JO.Adjusted, FFB.JO$FFB.JO.Adjusted,
+                   RES.JO$RES.JO.Adjusted, VKE.JO$VKE.JO.Adjusted, HYP.JO$HYP.JO.Adjusted, 
+                   ATT.JO$ATT.JO.Adjusted, SSS.JO$SSS.JO.Adjusted, SAC.JO$SAC.JO.Adjusted,
+                   EMI.JO$EMI.JO.Adjusted, ACS.JO$ACS.JO.Adjusted, OCT.JO$OCT.JO.Adjusted,
+                   SAR.JO$SAR.JO.Adjusted, BWN.JO$BWN.JO.Adjusted, APF.JO$APF.JO.Adjusted, 
+                   TEX.JO$TEX.JO.Adjusted, TMT.JO$TMT.JO.Adjusted, PPR.JO$PPR.JO.Adjusted, 
+                   DIB.JO$DIB.JO.Adjusted)
+colnames(RE_Prices) <- c("GRT", "RDF", "FFB", "RES", "VKE", "HYP", "ATT", "SSS", 
+                         "SAC", "EMI", "ACS", "OCT", "SAR", "BWN", "APF", "TEX", 
+                         "TMT", "PPR", "DIB")
+
+RE_ret <- na.omit(
+  Return.calculate(
+    na.omit(RE_Prices)
+  )
+)
+
+RE_RW <- RE_ret
+RE_RW$GRT <- RE_ret$GRT * SA_RE_Mkt_Share$GRT
+RE_RW$RDF <- RE_ret$RDF * SA_RE_Mkt_Share$RDF
+RE_RW$FFB <- RE_ret$FFB * SA_RE_Mkt_Share$FFB
+RE_RW$RES <- RE_ret$RES * SA_RE_Mkt_Share$RES
+RE_RW$VKE <- RE_ret$VKE * SA_RE_Mkt_Share$VKE
+RE_RW$HYP <- RE_ret$HYP * SA_RE_Mkt_Share$HYP
+RE_RW$ATT <- RE_ret$ATT * SA_RE_Mkt_Share$ATT
+RE_RW$SSS <- RE_ret$SSS * SA_RE_Mkt_Share$SSS
+RE_RW$SAC <- RE_ret$SAC * SA_RE_Mkt_Share$SAC
+RE_RW$EMI <- RE_ret$EMI * SA_RE_Mkt_Share$EMI
+RE_RW$ACS <- RE_ret$ACS * SA_RE_Mkt_Share$ACS
+RE_RW$OCT <- RE_ret$OCT * SA_RE_Mkt_Share$OCT
+RE_RW$SAR <- RE_ret$SAR * SA_RE_Mkt_Share$SAR
+RE_RW$BWN <- RE_ret$BWN * SA_RE_Mkt_Share$BWN
+RE_RW$APF <- RE_ret$APF * SA_RE_Mkt_Share$APF
+RE_RW$TEX <- RE_ret$TEX * SA_RE_Mkt_Share$TEX
+RE_RW$TMT <- RE_ret$TMT * SA_RE_Mkt_Share$TMT
+RE_RW$PPR <- RE_ret$PPR * SA_RE_Mkt_Share$PPR
+RE_RW$DIB <- RE_ret$DIB * SA_RE_Mkt_Share$DIB
+
+RE_Index <- RE_RW$GRT + RE_RW$RDF + RE_RW$FFB + RE_RW$RES + RE_RW$VKE + RE_RW$HYP + 
+  RE_RW$ATT + RE_RW$SSS + RE_RW$SAC + RE_RW$EMI + RE_RW$ACS + RE_RW$OCT + RE_RW$SAR + 
+  RE_RW$BWN + RE_RW$APF + RE_RW$TEX + RE_RW$TMT + RE_RW$PPR + RE_RW$DIB
+colnames(RE_Index) <- c("Index")
+
 # AUTOMOBILE INDUSTRY
 # Not Applicable due to frequency mismatch
 # Vehicle sales would be a great proxy although this info is given monthly
@@ -177,3 +226,54 @@ Ret_ret <- na.omit(
     na.omit(Retail)
   )
 )
+
+# Clicks Group Limited - CLS
+# Dis-Chem Pharmacies Limited - DCP
+# Mr Price Group Limited - MRP
+# The Foschini Group Limited - TFG
+# Truworths International Limited - TRU
+# Woolworths Holdings Limited - WHL
+# Pick n Pay Stores Limited - PIK
+# Shoprite Holdings Limited - SHP
+# Spar Group Limited - SPP
+
+SA_Retail_Mkt_Cap <- read_excel("SA Banks Market Cap.xlsx", 
+                                sheet = "Retail")
+colnames(SA_Retail_Mkt_Cap) <- c("CLS", "DCP", "MRP", "TFG", "TRU", "WHL",
+                                 "PIK", "SHP", "SPP")
+
+SA_Retail_Mkt_Share <- SA_Retail_Mkt_Cap/sum(SA_Retail_Mkt_Cap)
+
+getSymbols(c("CLS.JO", "DCP.JO", "MRP.JO", "TFG.JO", "TRU.JO", "WHL.JO", 
+             "PIK.JO", "SHP.JO", "SPP.JO"), 
+           from = Sys.Date() - 740,
+           to = Sys.Date())
+
+Retailers_Prices <- cbind(CLS.JO$CLS.JO.Adjusted, DCP.JO$DCP.JO.Adjusted,
+                          MRP.JO$MRP.JO.Adjusted, TFG.JO$TFG.JO.Adjusted,
+                          TRU.JO$TRU.JO.Adjusted, WHL.JO$WHL.JO.Adjusted,
+                          PIK.JO$PIK.JO.Adjusted, SHP.JO$SHP.JO.Adjusted,
+                          SPP.JO$SPP.JO.Adjusted)
+colnames(Retailers_Prices) <- c("CLS", "DCP", "MRP", "TFG", "TRU", "WHL",
+                                 "PIK", "SHP", "SPP")
+
+Retail_ret <- na.omit(
+  Return.calculate(
+    na.omit(Retailers_Prices)
+  )
+)
+
+Retail_RW <- Retail_ret #RW stands for return weights
+Retail_RW$CLS <- Retail_ret$CLS * SA_Retail_Mkt_Share$CLS
+Retail_RW$DCP <- Retail_ret$DCP * SA_Retail_Mkt_Share$DCP
+Retail_RW$MRP <- Retail_ret$MRP * SA_Retail_Mkt_Share$MRP
+Retail_RW$TFG <- Retail_ret$TFG * SA_Retail_Mkt_Share$TFG
+Retail_RW$TRU <- Retail_ret$TRU * SA_Retail_Mkt_Share$TRU
+Retail_RW$WHL <- Retail_ret$WHL * SA_Retail_Mkt_Share$WHL
+Retail_RW$PIK <- Retail_ret$PIK * SA_Retail_Mkt_Share$PIK
+Retail_RW$SHP <- Retail_ret$SHP * SA_Retail_Mkt_Share$SHP
+Retail_RW$SPP <- Retail_ret$SPP * SA_Retail_Mkt_Share$SPP
+
+SA_Retail_Index <- Retail_RW$CLS + Retail_RW$DCP + Retail_RW$MRP + Retail_RW$TFG +
+  Retail_RW$TRU + Retail_RW$WHL + Retail_RW$PIK + Retail_RW$SHP + Retail_RW$SPP
+colnames(SA_Retail_Index) <- c("Index")

@@ -95,9 +95,13 @@ ggplot(indexed_performance) +
   labs(title = "Return Performance of South African Banks", x = "Time", y = "Return", color = "Legend") +
   theme_classic() #High Correlation is Evident
 
-ggplot(as.data.frame(ttl_indexed_performance)) + 
-  geom_line(mapping = aes(x = index(SA_Bank_Index), y = Index), col = "black") + 
-  labs(title = "Return Performance for the Banking Industry", x = "Time", y = "Return") +
+cb <- c("CPI" = "grey", "Bank Index" = "black")
+
+ggplot() + 
+  geom_line(indexed_performance, mapping = aes(x = index(indexed_performance), y = CPI, col = "CPI"), linewidth = 0.75) + 
+  geom_line(as.data.frame(ttl_indexed_performance), mapping = aes(x = index(SA_Bank_Index), y = Index, col = "Bank Index"), linewidth = 0.75) + 
+  scale_color_manual(values = cb, guide = guide_legend(override.aes = list(fill = cb))) +
+  labs(title = "Capitec vs the Banking Industry", x = "Time", y = "Return", color = "Legend") +
   theme_classic() #CPI and FSR accounting for 48% of the market has reduced the performance of the banking industry
 
 # US TREASURY

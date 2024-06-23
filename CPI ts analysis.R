@@ -28,6 +28,8 @@ library(readxl)
 # - Investec Bank
 # - African Bank
 
+#### PULLING DATA ####
+
 # Pulling stock data for South African banks
 
 getSymbols(c("CPI.JO", "ABG.JO", "SBKP.JO", "FSR.JO", "NED.JO", "INL.JO"), 
@@ -281,3 +283,207 @@ Retail_RW$SPP <- Retail_ret$SPP * SA_Retail_Mkt_Share$SPP
 SA_Retail_Index <- Retail_RW$CLS + Retail_RW$DCP + Retail_RW$MRP + Retail_RW$TFG +
   Retail_RW$TRU + Retail_RW$WHL + Retail_RW$PIK + Retail_RW$SHP + Retail_RW$SPP
 colnames(SA_Retail_Index) <- c("Index")
+
+#### PLOTS AND BASIC STATS ####
+
+## Bank Performances
+
+### Cumulative returns
+
+cum_ret <- cumprod(1 + Banks_ret) -1 
+indexed_performance <- (cum_ret + 1) * 100
+
+ttl_cum_ret <- cumprod(1 + SA_Bank_Index) -1 
+ttl_indexed_performance <- (ttl_cum_ret + 1) * 100
+
+### Plotting banks preformance
+
+c <- c("CPI" = "grey", "ABG" = "red", "SBK" = "royalblue", "FSR" = "gold", 
+       "NED" = "darkgreen", "INL" = "navy")
+
+ggplot(indexed_performance) + 
+  geom_line(mapping = aes(x = index(indexed_performance), y = CPI, col = "CPI"), linewidth = 0.75) + 
+  geom_line(mapping = aes(x = index(indexed_performance), y = ABG, col = "ABG"), linewidth = 0.75) + 
+  geom_line(mapping = aes(x = index(indexed_performance), y = SBK, col = "SBK"), linewidth = 0.75) + 
+  geom_line(mapping = aes(x = index(indexed_performance), y = FSR, col = "FSR"), linewidth = 0.75) + 
+  geom_line(mapping = aes(x = index(indexed_performance), y = NED, col = "NED"), linewidth = 0.75) + 
+  geom_line(mapping = aes(x = index(indexed_performance), y = INL, col = "INL"), linewidth = 0.75) +
+  scale_color_manual(values = c, guide = guide_legend(override.aes = list(fill = c))) +
+  labs(title = "Return Performance of South African Banks", x = "Time", y = "Return", color = "Legend") +
+  theme_classic() #High Correlation is Evident
+
+### Plotting CPI against Banking Industry
+
+cb <- c("CPI" = "grey", "Bank Index" = "black")
+
+ggplot() + 
+  geom_line(indexed_performance, mapping = aes(x = index(indexed_performance), y = CPI, col = "CPI"), linewidth = 0.75) + 
+  geom_line(as.data.frame(ttl_indexed_performance), mapping = aes(x = index(SA_Bank_Index), y = Index, col = "Bank Index"), linewidth = 0.75) + 
+  scale_color_manual(values = cb, guide = guide_legend(override.aes = list(fill = cb))) +
+  labs(title = "Capitec vs the Banking Industry", x = "Time", y = "Return", color = "Legend") +
+  theme_classic() #CPI and FSR accounting for 48% of the market has reduced the performance of the banking industry
+
+Banks_plot <- merge(Banks_ret$CPI, SA_Bank_Index)
+
+ggplot(as.data.frame(Banks_plot), mapping = aes(x = CPI, y = Index)) + 
+  geom_point(col = "black", size = 2) + 
+  scale_x_continuous(limits = c(-0.5, 0.25)) +
+  scale_y_continuous(limits = c(-0.5, 0.25)) +
+  geom_smooth(method=lm, se=FALSE, col = "red") +
+  labs(title = "Capitec & SA Banks Correlation", x = "Capitec Returns", y = "SA Bank Returns") + 
+  theme_classic() #line of best fit is skewed because of outliers 
+
+ggplot(as.data.frame(Banks_plot), mapping = aes(x = CPI, y = Index)) + 
+  geom_point(col = "black", size = 2) + 
+  scale_x_continuous(limits = c(-0.25, 0.25)) +
+  scale_y_continuous(limits = c(-0.25, 0.25)) +
+  geom_smooth(method=lm, se=FALSE, col = "red") +
+  labs(title = "Capitec & SA Banks Correlation", x = "Capitec Returns", y = "SA Bank Returns") + 
+  theme_classic() #line of best fit is skewed because of outliers 
+
+### CPI vs U.S. Treasury
+
+ust_cum_ret <- cumprod(1 + Treasury) -1 
+ust_indexed_performance <- (ust_cum_ret + 1) * 100
+
+ct <- c("CPI" = "grey", "U.S. Treasury" = "royalblue")
+
+ggplot() + 
+  geom_line(indexed_performance, mapping = aes(x = index(indexed_performance), y = CPI, col = "CPI"), linewidth = 0.75) + 
+  geom_line(ust_indexed_performance, mapping = aes(x = index(ust_indexed_performance), y  = FVX.Adjusted, col = "U.S. Treasury"), linewidth = 0.75) +
+  scale_color_manual(values = ct, guide = guide_legend(override.aes = list(fill = ct))) +
+  labs(title = "Capitec vs U.S. Treasury", x = "Time", y = "Return", color = "Legend") +
+  theme_classic() 
+# Another issue. we are struggling to correctly plot the us treasury
+# use: PV = FV/(1+r)^t 
+# where: FV = 100 and t = 5
+
+ggplot() + 
+  geom_line(Banks_ret, mapping = aes(x = index(Banks_ret), y = CPI, col = "CPI"), linewidth = 0.75) + 
+  geom_line(Treasury, mapping = aes(x = index(Treasury), y  = FVX.Adjusted, col = "U.S. Treasury"), linewidth = 0.75) +
+  scale_color_manual(values = ct, guide = guide_legend(override.aes = list(fill = ct))) +
+  labs(title = "Capitec vs U.S. Treasury", x = "Time", y = "Return", color = "Legend") +
+  theme_classic() 
+# First idea looks promising
+
+### CPI vs SA Bond ETF
+
+gb_cum_ret <- cumprod(1 + GovBond_ret) -1 
+gb_indexed_performance <- (gb_cum_ret + 1) * 100
+
+cgb <- c("CPI" = "grey", "Gov. Bonds" = "darkgreen")
+
+ggplot() + 
+  geom_line(indexed_performance, mapping = aes(x = index(indexed_performance), y = CPI, col = "CPI"), linewidth = 0.75) + 
+  geom_line(gb_indexed_performance, mapping = aes(x = index(gb_indexed_performance), y  = STXGOV.JO.Adjusted, col = "Gov. Bonds"), linewidth = 0.75) +
+  scale_color_manual(values = cgb, guide = guide_legend(override.aes = list(fill = cgb))) +
+  labs(title = "Capitec vs SA Gov. Bonds", x = "Time", y = "Return", color = "Legend") +
+  theme_classic() # Correlation is present; CPI seems to exhibit more volatility
+
+
+### CPI vs SA Bond ETF
+
+gb_cum_ret <- cumprod(1 + GovBond_ret) -1 
+gb_indexed_performance <- (gb_cum_ret + 1) * 100
+
+cgb <- c("CPI" = "grey", "Gov. Bonds" = "darkgreen")
+
+ggplot() + 
+  geom_line(indexed_performance, mapping = aes(x = index(indexed_performance), y = CPI, col = "CPI"), linewidth = 0.75) + 
+  geom_line(gb_indexed_performance, mapping = aes(x = index(gb_indexed_performance), y  = STXGOV.JO.Adjusted, col = "Gov. Bonds"), linewidth = 0.75) +
+  scale_color_manual(values = cgb, guide = guide_legend(override.aes = list(fill = cgb))) +
+  labs(title = "Capitec vs SA Gov. Bonds", x = "Time", y = "Return", color = "Legend") +
+  theme_classic() 
+
+GovBond_plot <- merge(Banks_ret$CPI, GovBond_ret)
+
+ggplot(as.data.frame(GovBond_plot), mapping = aes(x = CPI, y = Index)) + 
+  geom_point(col = "darkgreen", size = 2) + 
+  scale_x_continuous(limits = c(-0.1, 0.1)) +
+  scale_y_continuous(limits = c(-0.1, 0.1)) +
+  geom_smooth(method=lm, se=FALSE, col = "orange") +
+  labs(title = "Capitec & SA Government Bonds Correlation", x = "Capitec Returns", y = "SA Bond Returns") + 
+  theme_classic()
+
+### CPI vs Market Indices
+
+m_cum_ret <- cumprod(1 + M_Ind_ret) -1 
+m_indexed_performance <- (m_cum_ret + 1) * 100
+
+cm <- c("CPI" = "grey", "Top 40" = "green", "S&P 500" = "red", "Nasdaq 100" = "black", 
+       "Euro STOXX 50" = "royalblue", "STOXX Europe 600" = "navy", "ASX 200" = "gold")
+
+ggplot() + 
+  geom_line(indexed_performance, mapping = aes(x = index(indexed_performance), y = CPI, col = "CPI"), linewidth = 0.75) + 
+  geom_line(m_indexed_performance, mapping = aes(x = index(m_indexed_performance), y = Top40, col = "Top 40"), linewidth = 0.75) + 
+  geom_line(m_indexed_performance, mapping = aes(x = index(m_indexed_performance), y = SNP500, col = "S&P 500"), linewidth = 0.75) + 
+  geom_line(m_indexed_performance, mapping = aes(x = index(m_indexed_performance), y = NDX100, col = "Nasdaq 100"), linewidth = 0.75) + 
+  geom_line(m_indexed_performance, mapping = aes(x = index(m_indexed_performance), y = STOXX50, col = "Euro STOXX 50"), linewidth = 0.75) + 
+  geom_line(m_indexed_performance, mapping = aes(x = index(m_indexed_performance), y = STOXX600, col = "STOXX Europe 600"), linewidth = 0.75) +
+  geom_line(m_indexed_performance, mapping = aes(x = index(m_indexed_performance), y = ASX200, col = "ASX 200"), linewidth = 0.75) +
+  scale_color_manual(values = cm, guide = guide_legend(override.aes = list(fill = cm))) +
+  labs(title = "CPI against Market Indices", x = "Time", y = "Return", color = "Legend") +
+  theme_classic() 
+
+### CPI vs SA Real Estate
+
+re_cum_ret <- cumprod(1 + RE_Index) -1 
+re_indexed_performance <- (re_cum_ret + 1) * 100
+
+cre <- c("CPI" = "grey", "Real Estate" = "brown")
+
+ggplot() + 
+  geom_line(indexed_performance, mapping = aes(x = index(indexed_performance), y = CPI, col = "CPI"), linewidth = 0.75) + 
+  geom_line(as.data.frame(re_indexed_performance), mapping = aes(x = index(re_indexed_performance), y  = Index, col = "Real Estate"), linewidth = 0.75) +
+  scale_color_manual(values = cre, guide = guide_legend(override.aes = list(fill = cre))) +
+  labs(title = "Capitec vs Real Estate Industry", x = "Time", y = "Return", color = "Legend") +
+  theme_classic() 
+
+RE_plot <- merge(Banks_ret$CPI, RE_Index)
+
+ggplot(as.data.frame(RE_plot), mapping = aes(x = CPI, y = Index)) + 
+  geom_point(col = "brown", size = 2) + 
+  geom_smooth(method = lm, se = FALSE, col = "navy") +
+  labs(title = "Capitec & Real Estate Correlation", x = "Capitec Returns", y = "Real Estate Returns") + 
+  theme_classic()
+
+ggplot(as.data.frame(RE_plot), mapping = aes(x = CPI, y = Index)) + 
+  geom_point(col = "brown", size = 2) + 
+  scale_x_continuous(limits = c(-0.1, 0.1)) +
+  scale_y_continuous(limits = c(-0.1, 0.1)) +
+  geom_smooth(method = lm, se = FALSE, col = "navy") +
+  labs(title = "Capitec & Real Estate Correlation (Excluding outliers)", x = "Capitec Returns", y = "Real Estate Returns") + 
+  theme_classic()
+
+### CPI vs Retail Industry
+
+retail_cum_ret <- cumprod(1 + SA_Retail_Index) -1 
+retail_indexed_performance <- (retail_cum_ret + 1) * 100
+
+cretail <- c("CPI" = "grey", "Retail Industry" = "red")
+
+ggplot() + 
+  geom_line(indexed_performance, mapping = aes(x = index(indexed_performance), y = CPI, col = "CPI"), linewidth = 0.75) + 
+  geom_line(as.data.frame(retail_indexed_performance), mapping = aes(x = index(retail_indexed_performance), y  = Index, col = "Retail Industry"), linewidth = 0.75) +
+  scale_color_manual(values = cretail, guide = guide_legend(override.aes = list(fill = cretail))) +
+  labs(title = "Capitec vs Retail Industry", x = "Time", y = "Return", color = "Legend") +
+  theme_classic() 
+
+Retail_plot <- merge(Banks_ret$CPI, SA_Retail_Index)
+
+ggplot(as.data.frame(Retail_plot), mapping = aes(x = CPI, y = Index)) + 
+  geom_point(col = "red", size = 2) + 
+  scale_x_continuous(limits = c(-0.1, 0.1)) +
+  scale_y_continuous(limits = c(-0.1, 0.1)) +
+  geom_smooth(method=lm, se=FALSE, col = "navy") +
+  labs(title = "Capitec & Retail Correlation", x = "Capitec Returns", y = "Retail Industry Returns") + 
+  theme_classic()
+
+#### BASIC STATS ####
+
+Banking_Stats <- basicStats(cbind(SA_Bank_Index, Banks_ret))
+
+#### SIMPLE REGRESSIONS ####
+
+CPIvBIndex <- lm(Banks_ret$CPI ~ SA_Bank_Index)
+summary(CPIvBIndex)

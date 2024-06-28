@@ -4,10 +4,11 @@ cPort_perf <- cbind(Ttl_value, stock_values)
 
 #Port_perf <- rbind(Port_perf, cPort_perf)
 
-Port_perf <- ifelse(
-  index(cPort_perf) = tail(Port_perf, 1), Port_perf,
-  rbinf(Port_perf, cPort_perf)
-)
+if (index(cPort_perf) == tail(index(Port_perf), 1)) {
+  Port_perf <- Port_perf
+} else {
+  Port_perf <- rbind(Port_perf, cPort_perf)
+}
 
 col <- c("Ttl_value" = "black", "STX500" = "red", "STX40" = "darkgreen", "STX100" = "grey",
          "STXEMG" = "green", "SYGWD" = "brown", "PAH3" = "orange", "CPI" = "lavender",

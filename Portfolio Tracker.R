@@ -57,12 +57,11 @@ create_sequence <- function(base, growth_rate, n, add_ons) {
   sequence[1] <- base
   
   # Initial increment
-  increment <- 0
+  increment <- add_ons
   
   # Fill in the sequence with the growing increment
   for (i in 2:n) {
     sequence[i] <- sequence[i-1] + (sequence[i-1] * growth_rate) + increment
-    increment <- increment + add_ons
   }
   
   return(sequence)

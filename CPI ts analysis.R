@@ -483,6 +483,13 @@ ggplot(as.data.frame(Retail_plot), mapping = aes(x = CPI, y = Index)) +
 
 Banking_Stats <- basicStats(cbind(SA_Bank_Index, Banks_ret))
 
+Market_Stats <- basicStats(M_Ind_ret)
+
+Other_Factors <- cbind(Treasury, GovBond_ret, RE_Index, SA_Retail_Index)
+colnames(Other_Factors) <- c("US_rates", "SA_Bonds", "Real_Estate", "Retail")
+
+OF_Stats <- basicStats(Other_Factors)
+
 #### SIMPLE REGRESSIONS ####
 
 CPIvBIndex <- lm(Banks_ret$CPI ~ SA_Bank_Index)

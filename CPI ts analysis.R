@@ -494,3 +494,39 @@ OF_Stats <- basicStats(Other_Factors)
 
 CPIvBIndex <- lm(Banks_ret$CPI ~ SA_Bank_Index)
 summary(CPIvBIndex)
+
+CPIvBIndex <- lm(Banks_ret$CPI ~ SA_Bank_Index)
+summary(CPIvBIndex) # We basically see CPI's beta against the Banking Industry
+# Its a bit more volatile which meets expectations due to the lower stdev of the index due to diversification
+
+CPIvTreas <- lm(Banks_ret$CPI ~ Treasury) # you need to sort out the length difference
+summary(CPIvTreas)
+
+CPIvGovBond <- lm(Banks_ret$CPI ~ GovBond_ret)
+summary(CPIvGovBond)
+
+CPIvTop40_ds <- na.omit(cbind(Banks_ret$CPI, M_Ind_ret$Top40))
+CPIvTop40 <- lm(CPIvTop40_ds$CPI ~ CPIvTop40_ds$Top40)
+summary(CPIvTop40)
+
+CPIvSNP_ds <- na.omit(cbind(Banks_ret$CPI, M_Ind_ret$SNP500))
+CPIvSNP <- lm(CPIvSNP_ds$CPI ~ CPIvSNP_ds$SNP500)
+summary(CPIvSNP)
+
+CPIvFTSE_ds <- na.omit(cbind(Banks_ret$CPI, M_Ind_ret$FTSE))
+CPIvFTSE <- lm(CPIvFTSE_ds$CPI ~ CPIvFTSE_ds$FTSE)
+summary(CPIvFTSE)
+
+CPIvSTOXX_ds <- na.omit(cbind(Banks_ret$CPI, M_Ind_ret$STOXX600))
+CPIvSTOXX <- lm(CPIvSTOXX_ds$CPI ~ CPIvSTOXX_ds$STOXX600)
+summary(CPIvSTOXX)
+
+CPIvASX_ds <- na.omit(cbind(Banks_ret$CPI, M_Ind_ret$ASX200))
+CPIvASX <- lm(CPIvASX_ds$CPI ~ CPIvASX_ds$ASX200)
+summary(CPIvASX)
+
+CPIvRE <- lm(Banks_ret$CPI ~ RE_Index)
+summary(CPIvRE)
+
+CPIvRetail <- lm(Banks_ret$CPI ~ SA_Retail_Index)
+summary(CPIvRetail)

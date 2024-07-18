@@ -530,3 +530,33 @@ summary(CPIvRE)
 
 CPIvRetail <- lm(Banks_ret$CPI ~ SA_Retail_Index)
 summary(CPIvRetail)
+
+#### Unit-Root Tests ####
+
+adf.test(SA_Bank_Index)
+pp.test(SA_Bank_Index)
+
+adf.test(GovBond_ret)
+pp.test(GovBond_ret)
+
+adf.test(M_Ind_ret$Top40)
+pp.test(M_Ind_ret$Top40)
+
+adf.test(M_Ind_ret$SNP500)
+pp.test(M_Ind_ret$SNP500)
+
+adf.test(M_Ind_ret$FTSE)
+pp.test(M_Ind_ret$FTSE)
+
+adf.test(M_Ind_ret$STOXX600)
+pp.test(M_Ind_ret$STOXX600)
+
+adf.test(M_Ind_ret$ASX200)
+pp.test(M_Ind_ret$ASX200)
+
+adf.test(RE_Index)
+pp.test(RE_Index)
+
+adf.test(SA_Retail_Index)
+pp.test(SA_Retail_Index)
+

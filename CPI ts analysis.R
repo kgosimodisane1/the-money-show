@@ -560,3 +560,40 @@ pp.test(RE_Index)
 adf.test(SA_Retail_Index)
 pp.test(SA_Retail_Index)
 
+#### Optimal lag selection ####
+
+SA_Banks_lag <- VARselect(na.omit(cbind(Banks_ret$CPI, SA_Bank_Index)), 
+                            lag.max = 10, type = "const")
+SA_Banks_lag$selection
+
+Treasury_lag <- VARselect(na.omit(cbind(Banks_ret$CPI, Treasury)), 
+                          lag.max = 10, type = "const")
+Treasury_lag$selection
+
+GovBond_lag <- VARselect(na.omit(cbind(Banks_ret$CPI, GovBond_ret)), 
+                          lag.max = 10, type = "const")
+GovBond_lag$selection
+
+CPIvTop40_lag <- VARselect(CPIvTop40_ds, lag.max = 10, type = "const")
+CPIvTop40_lag$selection
+
+CPIvSNP_lag <- VARselect(CPIvSNP_ds, lag.max = 10, type = "const")
+CPIvSNP_lag$selection
+
+CPIvFTSE_lag <- VARselect(CPIvFTSE_ds, lag.max = 10, type = "const")
+CPIvFTSE_lag$selection
+
+CPIvSTOXX_lag <- VARselect(CPIvSTOXX_ds, lag.max = 10, type = "const")
+CPIvSTOXX_lag$selection
+
+CPIvASX_lag <- VARselect(CPIvASX_ds, lag.max = 10, type = "const")
+CPIvASX_lag$selection
+
+RE_Index_lag <- VARselect(na.omit(cbind(Banks_ret$CPI, RE_Index)),
+                        lag.max = 10, type = "const")
+RE_Index_lag$selection
+
+SA_Retail_Index_lag <- VARselect(na.omit(cbind(Banks_ret$CPI, SA_Retail_Index)),
+                        lag.max = 10, type = "const")
+SA_Retail_Index_lag$selection #Interestingly this provides a 2-day lag order for some indicators
+

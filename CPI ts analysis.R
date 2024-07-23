@@ -597,3 +597,37 @@ SA_Retail_Index_lag <- VARselect(na.omit(cbind(Banks_ret$CPI, SA_Retail_Index)),
                         lag.max = 10, type = "const")
 SA_Retail_Index_lag$selection #Interestingly this provides a 2-day lag order for some indicators
 
+#### Banking Industry Analysis ####
+
+# Johansen Co-Integration Test
+
+SA_Banks_ds <- na.omit(cbind(Banks_ret$CPI, SA_Bank_Index))
+
+SA_Banks_lag <- VARselect(SA_Banks_ds, lag.max = 10, type = "const")
+SA_Banks_lag$selection
+
+SA_Banks.jt <- ca.jo(SA_Banks_ds, type = "trace", ecdet = "none", K = 2)
+summary(SA_Banks.jt) # test stat > 1% conf. lvl thus ts is cointegrated
+
+
+# Vector Error Correction Model
+ 
+SA_Banks_vecm <- VECM(SA_Banks_ds, lag = 1, r = 1, estim = "ML")
+summary(SA_Banks_vecm)
+
+SA_Banks_vecm$coefficients
+
+# interesting results. CPI and Index can predict CPI results with a significant ECT
+# Therefore there is autocorrelation in the CPI
+
+# Impulse Response Functions
+
+SB_vec2var <- vec2var(SA_Banks.jt)
+
+SA_Banks_irf <- irf(SB_vec2var)
+plot(SA_Banks_irf)
+
+# Granger Causality
+
+SA_Banks_gc <-  causality(VAR(SA_Banks_ds, p =1, type = "const"), cause = "Index")
+SA_Banks_gc

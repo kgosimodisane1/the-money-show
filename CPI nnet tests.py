@@ -1,13 +1,18 @@
-import pandas
-import pandas_datareader as pdr
+# import pandas_datareader as pdr
+import pandas as pd
+# import openpyxl
+import yfinance as yf
 
-# REQUESTING DATA FROM YAHOO FINANCE API
+# Request data via Yahoo public API
+# CPI = pdr.get_data_yahoo('CPI.JO')
 
-# Banking Industry
+CPI = yf.Ticker("CPI.JO").history(period = '5y')
+ABG = yf.Ticker("ABG.JO").history(period = '5y')
+SBK = yf.Ticker("SBK.JO").history(period = '5y')
+NED = yf.Ticker("NED.JO").history(period = '5y')
+FSR = yf.Ticker("FSR.JO").history(period = '5y')
+INL = yf.Ticker("INL.JO").history(period = '5y')
 
-CPI = pdr.get_data_yahoo('CPI.JO') # Capitec
-ABG = pdr.get_data_yahoo('ABG.JO') # ABSA
-SBK = pdr.get_data_yahoo('SBK.JO') # Standard Bank
-FSR = pdr.get_data_yahoo('FSR.JO') # First Rand
-NED = pdr.get_data_yahoo('NED.JO') # Nedbank
-INL = pdr.get_data_yahoo('INL.JO') # Investec
+bank_market_values = pd.read_excel(io="C:/Users/lenovo/OneDrive/Documents/SA Banks Market Cap.xlsx", sheet_name="Sheet1")
+
+print(CPI.info()) # calc. adj. closing price using close, dividends & stock splits

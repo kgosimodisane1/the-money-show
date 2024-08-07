@@ -631,3 +631,298 @@ plot(SA_Banks_irf)
 
 SA_Banks_gc <-  causality(VAR(SA_Banks_ds, p =1, type = "const"), cause = "Index")
 SA_Banks_gc
+
+#### Treasury Analysis ####
+
+# Johansen Co-Integration Test
+
+Treasury_ds <- na.omit(cbind(Banks_ret$CPI, Treasury))
+
+Treasury_lag <- VARselect(Treasury_ds, lag.max = 10, type = "const")
+Treasury_lag$selection
+
+Treasury.jt <- ca.jo(Treasury_ds, type = "trace", ecdet = "none", K = 2)
+summary(Treasury.jt) # test failed, although it was close
+
+# VAR
+
+Treasury_VAR <- VAR(Treasury_ds, p = 1, type = "const")
+summary(Treasury_VAR) # Treasury would not be a great predictor for CPI returns
+
+# Causlity
+
+Treasury_gc <- causality(Treasury_VAR, cause = "FVX.Adjusted")
+Treasury_gc # There's not a strong enough relationship
+
+#### Government Bond Analysis ####
+
+# Johansen Co-Integration 
+
+GovBond_ds <- na.omit(cbind(Banks_ret$CPI, GovBond_ret))
+
+GovBond_lag <- VARselect(GovBond_ds, lag.max = 10, type = "const")
+GovBond_lag$selection
+
+GovBond.jt <- ca.jo(GovBond_ds, type = "trace", ecdet = "none", K = 2)
+summary(GovBond.jt) # test passed with flying colours
+
+# VECM
+
+GovBond_VECM <- VECM(GovBond_ds, lag = 1, r = 1, estim = "ML")
+summary(GovBond_VECM)
+
+summary(VAR(GovBond_ds, p = 1, type = "const"))
+
+# causality 
+
+GovBond_gc <-  causality(VAR(GovBond_ds, p =1, type = "const"), cause = "Index")
+GovBond_gc
+
+# Correlation test passed but there was no significant relationship with CPI
+
+#### Top 40 Analysis ####
+
+#Johansen Co-Integration
+
+CPIvTop40_lag <- VARselect(CPIvTop40_ds, lag.max = 10, type = "const")
+CPIvTop40_lag$selection
+
+CPIvTop40.jt <- ca.jo(CPIvTop40_ds, type = "trace", ecdet = "none", K = 2)
+summary(CPIvTop40.jt) # test stat > 1% conf. lvl thus ts is cointegrated
+
+# VECM
+
+CPIvTop40_VECM <- VECM(CPIvTop40_ds, lag = 1, r = 1, estim = "ML")
+summary(CPIvTop40_ds)
+
+# Causlity
+
+CPIvTop40_gc <- causality(VAR(CPIvTop40_ds, p =1, type = "const"), cause = "Top40")
+CPIvTop40_gc
+
+#### S&P 500 Analysis ####
+
+CPIvSNP_lag <- VARselect(CPIvSNP_ds, lag.max = 10, type = "const")
+CPIvSNP_lag$selection
+
+CPIvSNP.jt <- ca.jo(CPIvSNP_ds, type = "trace", ecdet = "none", K = 2)
+summary(CPIvSNP.jt) # test stat > 1% conf. lvl thus ts is cointegrated
+
+# VECM
+
+CPIvSNP_VECM <- VECM(CPIvSNP_ds, lag = 1, r = 1, estim = "ML")
+summary(CPIvSNP_VECM) # No Significant ECT but the past performances predict future performance of CPI
+
+# VAR
+
+CPIvSNP_VAR <- VAR(CPIvSNP_ds, p =1, type = "const")
+summary(CPIvSNP_VAR)
+
+# causality
+
+CPIvSNP_gc <- causality(CPIvSNP_VAR, cause = "SNP500")
+CPIvSNP_gc
+
+#### Nasdaq Analysis ####
+
+CPIvNDX_ds <- na.omit(cbind(Banks_ret$CPI, M_Ind_ret$NDX100))
+
+
+CPIvNDX_lag <- VARselect(CPIvNDX_ds, lag.max = 10, type = "const")
+CPIvNDX_lag$selection
+
+CPIvNDX.jt <- ca.jo(CPIvNDX_ds, type = "trace", ecdet = "none", K = 2)
+summary(CPIvNDX.jt) # test stat > 1% conf. lvl thus ts is cointegrated
+
+# VECM
+
+CPIvNDX_VECM <- VECM(CPIvNDX_ds, lag = 1, r = 1, estim = "ML")
+summary(CPIvNDX_VECM) # NDX > SNP
+
+# VAR
+
+CPIvNDX_VAR <- VAR(CPIvNDX_ds, p =1, type = "const")
+summary(CPIvNDX_VAR)
+
+# causality
+
+CPIvNDX_gc <- causality(CPIvNDX_VAR, cause = "NDX100")
+CPIvNDX_gc
+
+#### FTSE 100 Analysis ####
+
+CPIvFTSE_lag <- VARselect(CPIvFTSE_ds, lag.max = 10, type = "const")
+CPIvFTSE_lag$selection
+
+CPIvFTSE.jt <- ca.jo(CPIvFTSE_ds, type = "trace", ecdet = "none", K = 2)
+summary(CPIvFTSE.jt) # test stat > 1% conf. lvl thus ts is cointegrated
+
+# VECM
+
+CPIvFTSE_VECM <- VECM(CPIvFTSE_ds, lag = 1, r = 1, estim = "ML")
+summary(CPIvFTSE_VECM) # Significant
+
+# VAR
+
+CPIvFTSE_VAR <- VAR(CPIvFTSE_ds, p =1, type = "const")
+summary(CPIvFTSE_VAR)
+
+# causality
+
+CPIvFTSE_gc <- causality(CPIvFTSE_VAR, cause = "FTSE")
+CPIvFTSE_gc
+
+#### STOXX 600 Analysis ####
+
+CPIvSTOXX_lag <- VARselect(CPIvSTOXX_ds, lag.max = 10, type = "const")
+CPIvSTOXX_lag$selection
+
+CPIvSTOXX.jt <- ca.jo(CPIvSTOXX_ds, type = "trace", ecdet = "none", K = 2)
+summary(CPIvSTOXX.jt) # test stat > 1% conf. lvl thus ts is cointegrated
+
+# VECM
+
+CPIvSTOXX_VECM <- VECM(CPIvSTOXX_ds, lag = 1, r = 1, estim = "ML")
+summary(CPIvSTOXX_VECM) # Significant
+
+# VAR
+
+CPIvSTOXX_VAR <- VAR(CPIvSTOXX_ds, p =1, type = "const")
+summary(CPIvFTSE_VAR)
+
+# causality
+
+CPIvSTOXX_gc <- causality(CPIvSTOXX_VAR, cause = "STOXX600")
+CPIvSTOXX_gc
+
+#### ASX 200 Analysis ####
+
+CPIvASX_lag <- VARselect(CPIvASX_ds, lag.max = 10, type = "const")
+CPIvASX_lag$selection
+
+CPIvASX.jt <- ca.jo(CPIvASX_ds, type = "trace", ecdet = "none", K = 2)
+summary(CPIvASX.jt) # test stat > 1% conf. lvl thus ts is cointegrated
+
+# VECM
+
+CPIvASX_VECM <- VECM(CPIvASX_ds, lag = 1, r = 1, estim = "ML")
+summary(CPIvASX_VECM) # Significant
+
+# VAR
+
+CPIvASX_VAR <- VAR(CPIvASX_ds, p =1, type = "const")
+summary(CPIvASX_VAR)
+
+# causality
+
+CPIvASX_gc <- causality(CPIvASX_VAR, cause = "ASX200")
+CPIvASX_gc #There's causality!!!!
+
+#### Real Estate Index ####
+
+# Johansen Co-Integration Test
+
+RE_ds <- na.omit(cbind(Banks_ret$CPI, RE_Index))
+
+RE_lag <- VARselect(RE_ds, lag.max = 10, type = "const")
+RE_lag$selection
+
+RE.jt <- ca.jo(RE_ds, type = "trace", ecdet = "none", K = 2)
+summary(RE.jt) # test stat > 1% conf. lvl thus ts is cointegrated
+
+
+# Vector Error Correction Model
+
+RE_vecm <- VECM(RE_ds, lag = 1, r = 1, estim = "ML")
+summary(RE_vecm)
+
+# VAR 
+
+RE_VAR <- VAR(RE_ds, p = 1, type = "const")
+summary(RE_VAR)
+
+# Granger Causality
+
+RE_gc <-  causality(RE_VAR, cause = "Index")
+RE_gc
+
+#### Retail Index ####
+
+# Johansen Co-Integration Test
+
+Retail_ds <- na.omit(cbind(Banks_ret$CPI, SA_Retail_Index))
+
+Retail_lag <- VARselect(Retail_ds, lag.max = 10, type = "const")
+Retail_lag$selection
+
+Retail.jt <- ca.jo(Retail_ds, type = "trace", ecdet = "none", K = 2)
+summary(Retail.jt) # test stat > 1% conf. lvl thus ts is cointegrated
+
+# Vector Error Correction Model
+
+Retail_vecm <- VECM(Retail_ds, lag = 1, r = 1, estim = "ML")
+summary(Retail_vecm)
+
+# VAR 
+
+Retail_VAR <- VAR(Retail_ds, p = 1, type = "const")
+summary(Retail_VAR)
+
+# Granger Causality
+
+Retail_gc <-  causality(Retail_VAR, cause = "Index")
+Retail_gc # causality!!!!
+
+#### Correlation ####
+
+factors_corr <- cor(
+  na.omit(
+    cbind(SA_Bank_Index, Treasury, GovBond_ret, M_Ind_ret, RE_Index, SA_Retail_Index)
+  )
+)
+
+# To summarize the results the only severe correlation is between SNP & Nasdaq
+# Thus all significant relationships explain something unique about CPI performance.
+# Only SNP 500 will be omitted from this model
+
+#### Simple Neural Net ####
+
+CPI_factors <- cbind(SA_Bank_Index, Treasury, GovBond_ret, M_Ind_ret, RE_Index, SA_Retail_Index)
+
+#Optimisation
+
+# We can use the p-values from our models as the targets for our optimisation model
+# to get optimal weights. Models with the lowest p-values will be assigned larger weights.
+
+# ret_perf <- rportf[paste(init_date,latest_date, sep = "::")]
+
+Day1 <- Sys.Date() - 740
+DayL <- Sys.Date()
+Day1_end <- Sys.Date() - 555
+DayL_start <- Sys.Date() - 554
+
+Full_ds <- na.omit(cbind(Banks_ret$CPI, CPI_factors))
+Training_set <- Full_ds[paste(Day1, Day1_end, sep = "::")]
+Test_set <- Full_ds[paste(DayL_start, DayL, sep = "::")]
+
+test_nnet <- neuralnet(CPI ~ Bank_Index + FVX.Adjusted + GovBond_Index + Top40 + 
+                         SNP500 + NDX100 + FTSE + STOXX600 + ASX200 + RE_Index + 
+                         Retail_Index, 
+                      data = Training_set, hidden = c(7, 3), rep = 10)
+
+plot(test_nnet)
+
+test_pred <- predict(test_nnet, Test_set)
+test_pred <- as.xts(test_pred)
+colnames(test_pred) <- c("CPIe")
+index(test_pred) <- as.Date(index(test_pred))
+
+ggplot() +
+  geom_line(data = Test_set, mapping = aes(x = index(Test_set), y = CPI), col = "black", linewidth = 0.75) + 
+  geom_line(data = test_pred, mapping = aes(x = index(test_pred), y = CPIe), col = "red", linewidth = 0.75) +
+  theme_classic() 
+
+# The neural net has predicted a few return fluctuations greater than 5% in absolute terms which is pretty impressive.
+# Although the model can be improved.
+
+# Well done mate!!!

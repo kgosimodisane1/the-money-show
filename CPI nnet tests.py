@@ -146,3 +146,17 @@ retail_Index['Retail'] = (retail_returns['CLS.JO']*retail_wts['CLS'].iloc[0] + r
                           retail_returns['TRU.JO']*retail_wts['TRU'].iloc[0] + retail_returns['WHL.JO']*retail_wts['WHL'].iloc[0] +
                           retail_returns['PIK.JO']*retail_wts['PIK'].iloc[0] + retail_returns['SHP.JO']*retail_wts['SHP'].iloc[0] +
                           retail_returns['SPP.JO']*retail_wts['SPP'].iloc[0])
+
+dfs = [Banking_Index, RE_Index, retail_Index]
+df_ds = reduce(lambda left, right: pd.merge(left, right, on='Date', how='inner'), dfs)
+
+df_ds.index = df_ds.index.date
+Treasury.index = Treasury.index.date
+Top40_r.index = Top40_r.index.date
+NDX_r.index = NDX_r.index.date
+FTSE_r.index = FTSE_r.index.date
+STOXX_r.index = STOXX_r.index.date
+ASX_r.index = ASX_r.index.date
+
+full_ds = [df_ds, Treasury, Top40_r, NDX_r, FTSE_r, STOXX_r, ASX_r]
+merged_df = reduce(lambda left, right: pd.merge(left, right, left_index=True, right_index=True, how='inner'), full_ds)

@@ -887,6 +887,7 @@ factors_corr <- cor(
 
 #### Simple Neural Net ####
 
+
 CPI_factors <- cbind(SA_Bank_Index, Treasury, GovBond_ret, M_Ind_ret, RE_Index, SA_Retail_Index)
 
 #Optimisation
@@ -898,8 +899,8 @@ CPI_factors <- cbind(SA_Bank_Index, Treasury, GovBond_ret, M_Ind_ret, RE_Index, 
 
 Day1 <- Sys.Date() - 740
 DayL <- Sys.Date()
-Day1_end <- Sys.Date() - 555
-DayL_start <- Sys.Date() - 554
+Day1_end <- Sys.Date() - 185
+DayL_start <- Sys.Date() - 184
 
 Full_ds <- na.omit(cbind(Banks_ret$CPI, CPI_factors))
 Training_set <- Full_ds[paste(Day1, Day1_end, sep = "::")]
@@ -922,7 +923,47 @@ ggplot() +
   geom_line(data = test_pred, mapping = aes(x = index(test_pred), y = CPIe), col = "red", linewidth = 0.75) +
   theme_classic() 
 
-# The neural net has predicted a few return fluctuations greater than 5% in absolute terms which is pretty impressive.
+# Testing Predictive Power
+
+data_v_pred <- lm(Test_set$CPI ~ test_pred$CPIe)
+model_r2 <- summary(data_v_pred)$r.squared
+
+
+# The neural net has sum predicted a few return fluctuations greater than 5% in absolute terms which is pretty impressive.
 # Although the model can be improved.
 
 # Well done mate!!!
+
+# Areas for improvement
+# We can include the Nikkei index & Bitcoin to see their predictive power.
+# Check coefficient of determination and mse to see the prediction against the test data's performance
+
+# NNet test using lagged explanatory variables
+
+lagged_x_var <- lag(Full_ds[, 2:12])
+lagged_ds <- na.omit(
+  cbind(Full_ds$CPI, lagged_x_var)
+)
+
+Training_set_2 <- lagged_ds[paste(Day1, Day1_end, sep = "::")]
+Test_set_2 <- lagged_ds[paste(DayL_start, DayL, sep = "::")]
+
+test_nnet_2 <- neuralnet(CPI ~ Bank_Index + FVX.Adjusted + GovBond_Index + Top40 + 
+                         SNP500 + NDX100 + FTSE + STOXX600 + ASX200 + RE_Index + 
+                         Retail_Index, 
+                       data = Training_set_2, hidden = c(7, 3), rep = 10)
+
+plot(test_nnet_2)
+
+test_pred_2 <- predict(test_nnet_2, Test_set_2)
+test_pred_2 <- as.xts(test_pred_2)
+colnames(test_pred_2) <- c("CPIe")
+index(test_pred_2) <- as.Date(index(test_pred_2))
+
+ggplot() +
+  geom_line(data = Test_set_2, mapping = aes(x = index(Test_set_2), y = CPI), col = "black", linewidth = 0.75) + 
+  geom_line(data = test_pred_2, mapping = aes(x = index(test_pred_2), y = CPIe), col = "red", linewidth = 0.75) +
+  theme_classic() 
+
+data_v_pred_2 <- lm(Test_set_2$CPI ~ test_pred_2$CPIe)
+model_r2_2 <- summary(data_v_pred_2)$r.squared

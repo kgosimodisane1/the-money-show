@@ -110,3 +110,8 @@ ggplot() +
   scale_color_manual(values = col2, guide = guide_legend(override.aes = list(fill = col2))) +
   labs(title = "Portfolio Performance vs Benchmark", x = "Time", y = "Rand Value", color = "Legend") +
   theme_classic()
+
+# Value at Risk Calculation
+
+Port_VaR <- VaR(na.omit(Return.calculate(Port_perf$Ttl_value)) , method = "gaussian")
+Possible_loss <- abs(Port_VaR)*tail(Port_perf$Ttl_value, 1)

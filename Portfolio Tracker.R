@@ -115,3 +115,35 @@ ggplot() +
 
 Port_VaR <- VaR(na.omit(Return.calculate(Port_perf$Ttl_value)) , method = "gaussian")
 Possible_loss <- abs(Port_VaR)*tail(Port_perf$Ttl_value, 1)
+
+# Portfolio return performance 
+
+Port_wght <- as.data.frame(t(apply(Port_perf[,-1], 1, function(row) row / sum(row))))
+Port_wght <- rownames_to_column(Port_wght, var = "Date")
+rportf.d <- rownames_to_column(as.data.frame(rportf), var = "Date")
+merge_ds <- merge(rportf.d, Port_wght, by = "Date", all = FALSE) #try and merge this column
+port_ds <- column_to_rownames(merge_ds, var = "Date") #var.x = return, var.y = weight
+
+port_ret <- port_ds$STX500.x*port_ds$STX500.y + port_ds$STX40.x*port_ds$STX40.y +
+  port_ds$STX100.x*port_ds$STX100.y + port_ds$STXEMG.x*port_ds$STXEMG.y + 
+  port_ds$SYGWD.x*port_ds$SYGWD.y + port_ds$PAH3.x*port_ds$PAH3.y + port_ds$CPI.x*port_ds$CPI.y +
+  port_ds$PPE.x*port_ds$PPE.y + port_ds$SDO.x*port_ds$SDO.y + port_ds$COH.x*port_ds$COH.y +
+  port_ds$SUI.x*port_ds$SUI.y + port_ds$INL.x*port_ds$INL.y + port_ds$RIVN.x*port_ds$RIVN.y +
+  port_ds$BTC.x*port_ds$BTC.y + port_ds$ETH.x*port_ds$ETH.y + port_ds$UNI.x*port_ds$UNI.y
+
+
+port_ret <- as.data.frame(cbind(merge_ds$Date, port_ret))
+port_ret$V1 <- as.Date(port_ret$V1)
+port_ret$port_ret <- as.numeric(port_ret$port_ret)
+port_ret <- column_to_rownames(as.data.frame(port_ret), var = "V1")
+cum_p_ret <- cumprod(1 + port_ret) - 1
+cum_p_ret <- as.xts(cum_p_ret)
+
+
+daily_ret <- prod(1 + port_ret)^(-nrow(port_ret))
+annualised_ret <- (1+annualised_ret)^252-1
+
+ggplot(cum_p_ret) +
+  geom_line(mapping = aes(x = index(cum_p_ret), y = cum_p_ret$port_ret, col = "red"), linewidth = 0.75) +
+  labs(title = "YTD Return Performance", x = "Date", y = "Return") +
+  theme_classic()

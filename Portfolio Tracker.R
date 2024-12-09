@@ -147,3 +147,17 @@ ggplot(cum_p_ret) +
   geom_line(mapping = aes(x = index(cum_p_ret), y = cum_p_ret$port_ret, col = "red"), linewidth = 0.75) +
   labs(title = "YTD Return Performance", x = "Date", y = "Return") +
   theme_classic()
+
+#Stacked ts graph
+# This shows the weight of each asset in the portfolio
+                                   
+Port_wght_lng_fmt <- Port_wght %>%
+  pivot_longer(cols = -Date, names_to = "Stocks", values_to = "Value")
+
+Port_wght_lng_fmt$Date <- as.Date(Port_wght_lng_fmt$Date)
+
+ggplot(Port_wght_lng_fmt, aes(x = Date, y = Value, fill = Stocks)) + 
+  geom_area(position = "stack") + 
+  scale_y_continuous(labels = scales::percent) +
+  labs(y = "Percentage", "Date", title = "Asset Weight Distribution") + 
+  theme_classic()                                   

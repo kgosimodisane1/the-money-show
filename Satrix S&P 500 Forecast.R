@@ -171,3 +171,75 @@ ggplot(fcst_ret, mapping = aes(x = STX500, y = Rand)) +
   geom_smooth(method = lm, se = FALSE, col = "navy") +
   labs(title = "Satrix 500 ETF vs Rand/Dollar", x = "STX500 Returns", y = "Rand Returns") +
   theme_classic()
+
+# After brief observation we can not expect Oil nor the Rand/Dollar to have much influence on STX500 performance
+# According to theory, the Satrix 500 ETF is supposed to be presented on the y-axis as it is meant to be an independent variable but due to the amount of effort it would take to correct this mistake, we will leave it as it is as the basic conclusions can be deduced from the above graphs.
+
+#### BASIC STATS ####
+
+fcst_stats <- basicStats(fcst_ret)
+plot(fcst_stats)
+
+ggplot() + 
+  geom_density(fcst_ret, mapping = aes(GSPC, col = "GSPC"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(DJI, col = "DJI"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(NDX, col = "NDX"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(VIX, col = "VIX"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(Gold, col = "Gold"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(Oil, col = "Oil"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(TNX, col = "TNX"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(TYX, col = "TYX"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(MWS, col = "MWS"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(MME, col = "MME"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(Dollar, col = "Dollar"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(Rand, col = "Rand"), fill = "white", alpha = 0, size = 0.75) + 
+  geom_density(fcst_ret, mapping = aes(STX500, col = "STX500"), fill = "white", alpha = 0,, size = 0.75) + 
+  scale_color_manual(values = fc, guide = guide_legend(override.aes = list(fill = fc))) +
+  xlim(-0.25, 0.25) +
+  labs(title = "Asset Return Distribution", x = "Asset Returns", y = "Distribution") +
+  theme_classic()
+
+# Try to make it interactive where the user can hover over the graph and see specifics
+
+#### UNIT ROOT TESTS ####
+
+adf.test(fcst_ret$GSPC) 
+pp.test(fcst_ret$GSPC) 
+
+adf.test(fcst_ret$DJI) 
+pp.test(fcst_ret$DJI) 
+
+adf.test(fcst_ret$NDX)
+pp.test(fcst_ret$NDX)
+
+adf.test(fcst_ret$VIX)
+pp.test(fcst_ret$VIX)
+
+adf.test(fcst_ret$Gold)
+pp.test(fcst_ret$Gold)
+
+adf.test(fcst_ret$Oil)
+pp.test(fcst_ret$Oil)
+
+adf.test(fcst_ret$TNX)
+pp.test(fcst_ret$TNX)
+
+adf.test(fcst_ret$TYX)
+pp.test(fcst_ret$TYX)
+
+adf.test(fcst_ret$MWS)
+pp.test(fcst_ret$MWS)
+
+adf.test(fcst_ret$MME)
+pp.test(fcst_ret$MME)
+
+adf.test(fcst_ret$Dollar)
+pp.test(fcst_ret$Dollar)
+
+adf.test(fcst_ret$Rand)
+pp.test(fcst_ret$Rand)
+
+adf.test(fcst_ret$STX500)
+pp.test(fcst_ret$STX500)
+
+# All assets are stationary in their returns

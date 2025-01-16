@@ -300,3 +300,128 @@ Rand_select$selection # Mostly 2 days lag
 STX500_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$STX500),
                          lag.max = 10, type = "const")
 STX500_select$selection
+
+#### FORECASTING ANALYSIS ####
+
+# GSPC
+
+GSPC_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$GSPC), type = "trace", 
+                 ecdet = "none", K = 2)
+summary(GSPC_jt) # Co-integration is present!!
+
+GSPC_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$GSPC), lag = 1, r =1, 
+                  estim = "ML")
+summary(GSPC_vecm) # GSPC could be a greater predictor of STX500 performance
+# It also has autocorrelation so MAs should be considered as well.
+
+#add irf, causality, FEVD & structural break test
+
+# DJI
+
+DJI_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$DJI), type = "trace",
+                ecdet = "none", K = 2)
+summary(DJI_jt) # Passed Co-integration test
+
+DJI_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$DJI), lag = 1, r =1, 
+                 estim = "ML")
+summary(DJI_vecm) # relationship seems to be greater for GSPC 
+
+# NDX
+
+NDX_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$NDX), type = "trace",
+                ecdet = "none", K = 2)
+summary(NDX_jt) # There is co-integration
+
+NDX_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$NDX), lag = 1, r =1, 
+                 estim = "ML")
+summary(NDX_vecm) # NDX seems significantly stronger than GSPC
+
+# VIX
+
+VIX_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$VIX), type = "trace",
+                ecdet = "none", K =2)
+summary(VIX_jt)  # There is co-integration
+
+VIX_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$VIX), lag = 1, r = 1,
+               estim = "ML")
+summary(VIX_vecm) # Significant relationship
+
+# Gold
+
+Gold_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$Gold), type = "trace",
+                 ecdet = "none", K = 2)
+summary(Gold_jt)
+
+Gold_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$Gold), lag = 1, r = 1,
+                  estim = "ML")
+summary(Gold_vecm) # Significant relationship
+
+# Oil
+
+Oil_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$Oil), type = "trace",
+                ecdet = "none", K = 3)
+summary(Oil_jt)
+
+Oil_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$Oil), lag = 2, r = 1,
+                 estim = "ML")
+summary(Oil_vecm) # There is statistical significance
+
+# TNX
+
+TNX_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$TNX), type = "trace",
+                ecdet = "none", K = 2)
+summary(TNX_jt)
+
+TNX_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$TNX), lag = 1, r = 1,
+                 estim = "ML")
+summary(TNX_vecm) # High significance
+
+# TYX
+
+TYX_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$TYX), type = "trace",
+                ecdet = "none", K = 2)
+summary(TYX_jt)
+
+TYX_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$TYX), lag = 1, r = 1,
+                 estim = "ML")
+summary(TYX_vecm)
+
+# MWS
+
+MWS_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$MWS), type = "trace",
+                ecdet = "none", K = 2)
+summary(MWS_jt)
+
+MWS_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$MWS), lag = 1, r = 1,
+                 estim = "ML")
+summary(MWS_vecm) # only a significant ect, otherwise weak
+
+# MME
+
+MME_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$MME), type = "trace",
+                ecdet = "none", K = 2)
+summary(MME_jt)
+
+MME_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$MME), lag = 1, r = 1,
+                 estim = "ML")
+summary(MME_vecm) # slightly better relationship than MWS
+
+# Dollar
+
+Dollar_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$Dollar), type = "trace",
+                   ecdet = "none", K = 2)
+summary(Dollar_jt)
+
+Dollar_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$Dollar), lag = 1, r = 1,
+                 estim = "ML")
+summary(Dollar_vecm) # significant relationship
+
+# Rand 
+
+Rand_jt <- ca.jo(cbind(fcst_ret$STX500, fcst_ret$Rand), type = "trace",
+                 ecdet = "none", K = 3)
+summary(Rand_jt)
+
+Rand_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$Rand), lag = 2, r = 1,
+                  estim = "ML")
+summary(Rand_vecm) # moderate-weak relationship but still relevant

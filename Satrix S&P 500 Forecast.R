@@ -243,3 +243,60 @@ adf.test(fcst_ret$STX500)
 pp.test(fcst_ret$STX500)
 
 # All assets are stationary in their returns
+
+#### OPTIMAL LAG SELECTION ####
+
+ds_lag_select <- VARselect(fcst_ret, lag.max = 10, type = "const")
+ds_lag_select$selection 
+
+GSPC_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$GSPC),
+                         lag.max = 10, type = "const")
+GSPC_select$selection
+
+DJI_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$DJI),
+                         lag.max = 10, type = "const")
+DJI_select$selection
+
+NDX_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$NDX),
+                         lag.max = 10, type = "const")
+NDX_select$selection
+
+VIX_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$VIX),
+                         lag.max = 10, type = "const")
+VIX_select$selection
+
+Gold_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$Gold),
+                         lag.max = 10, type = "const")
+Gold_select$selection
+
+Oil_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$Oil),
+                         lag.max = 10, type = "const")
+Oil_select$selection # 1 & 2 day lag selections
+
+TNX_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$TNX),
+                         lag.max = 10, type = "const")
+TNX_select$selection
+
+TYX_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$TYX),
+                         lag.max = 10, type = "const")
+TYX_select$selection
+
+MWS_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$MWS),
+                         lag.max = 10, type = "const")
+MWS_select$selection
+
+MME_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$MME),
+                         lag.max = 10, type = "const")
+MME_select$selection
+
+Dollar_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$Dollar),
+                         lag.max = 10, type = "const")
+Dollar_select$selection
+
+Rand_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$Rand),
+                         lag.max = 10, type = "const")
+Rand_select$selection # Mostly 2 days lag
+
+STX500_select <- VARselect(cbind(fcst_ret$STX500, fcst_ret$STX500),
+                         lag.max = 10, type = "const")
+STX500_select$selection

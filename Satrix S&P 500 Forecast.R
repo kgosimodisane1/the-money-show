@@ -425,3 +425,72 @@ summary(Rand_jt)
 Rand_vecm <- VECM(cbind(fcst_ret$STX500, fcst_ret$Rand), lag = 2, r = 1,
                   estim = "ML")
 summary(Rand_vecm) # moderate-weak relationship but still relevant
+
+#### SIMPLE NEURAL NET ####
+
+Vars <- cbind(fcst_ret$STX500, lag(fcst_ret$STX500), lag(lag(fcst_ret$STX500)),
+                           lag(fcst_ret$GSPC), lag(fcst_ret$DJI), lag(fcst_ret$NDX), 
+                           lag(fcst_ret$VIX), lag(fcst_ret$Gold), lag(fcst_ret$Oil),
+                           lag(lag(fcst_ret$Oil)), lag(fcst_ret$TNX), lag(fcst_ret$TYX), 
+                           lag(fcst_ret$MWS), lag(fcst_ret$MME), lag(fcst_ret$Dollar), 
+                           lag(fcst_ret$Rand), lag(lag(fcst_ret$Rand)))
+colnames(Vars) <- c("STX500", "STX500.l1", "STX500.l2", "GSPC.l1", "DJI.l1",
+                            "NDX.l1", "VIX.l1", "Gold.l1", "Oil.l1", "Oil.l2", 
+                            "TNX.l1", "TYX.l1", "MWS.l1", "MME.l1", "Dollar.l1",
+                            "Rand.l1", "Rand.l2")
+
+Vars <- na.omit(Vars)
+
+Train_start <- index(head(Vars, 1))
+Test_end <- index(tail(Vars, 1))
+Train_end <- Day1 + 0.7 * (index(tail(Vars, 1)) - index(head(Vars, 1)))
+Test_start <- Day1_end + 1
+
+Training_set <- Vars[paste(Train_start, Train_end, sep = "::"), ]
+Test_set <- Vars[paste(Test_start, Test_end, sep = "::"), ]
+
+test_nnet <- neuralnet(STX500 ~ STX500.l1 + STX500.l2 + GSPC.l1 + DJI.l1 + NDX.l1
+                       + VIX.l1 + Gold.l1 + Oil.l1 + Oil.l2 + TNX.l1 + TYX.l1 + 
+                         MWS.l1 + MME.l1 + Dollar.l1 + Rand.l1 + Rand.l2, 
+                       data = Training_set, hidden = c(12, 6, 3), rep = 10)
+
+plot(test_nnet)
+
+test_pred <- as.xts(predict(test_nnet, Test_set))
+colnames(test_pred) <- c("STX500e")
+index(test_pred) <- as.Date(index(test_pred)) + 1
+
+ggplot() +
+  geom_line(data = Test_set, mapping = aes(x = index(Test_set), y = STX500), col = "black", linewidth = 0.75) + 
+  geom_line(data = test_pred, mapping = aes(x = index(test_pred), y = STX500e), col = "red", linewidth = 0.75) +
+  theme_classic()
+
+# Testing Predictive Power
+
+data_v_pred <- lm(Test_set$STX500 ~ test_pred$STX500e)
+data_v_pred_sum <- summary(data_v_pred)
+data_v_pred_sum
+
+model_r2 <- summary(data_v_pred)$r.squared
+model_adj.r2 <- data_v_pred_sum$adj.r.squared
+model_fs <- data_v_pred_sum$fstatistic
+
+model_est <- data_v_pred_sum$coefficients
+model_corr <- model_est[2, 1]
+model_pv <- model_est[2, 4]
+
+model_corr <- cor(Test_set$STX500, test_pred$STX500e)
+
+
+# with a corr = 0.42 and a pv = 0.048, we can say that there is predictive power
+# but it is only moderately strong
+
+# EE has a brokerage fee of 0.25% meaning we need to expect a return of higher than
+# 0.5% to realize a profit. 
+# Thus our model must have a value that is higher than 0.5% > x*0.42 OR 0.005 > x*0.42
+# -> 1.19% OR 0.0119 > x
+
+# When including standard error of 0.21 we get 0.5% > x*(0.42 - 0.21) (21)
+# -> 2.38% OR 0.0238 > x 
+
+# Should be 0.005 > x*0.42 +/- 0.21

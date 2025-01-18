@@ -494,3 +494,54 @@ model_corr <- cor(Test_set$STX500, test_pred$STX500e)
 # -> 2.38% OR 0.0238 > x 
 
 # Should be 0.005 > x*0.42 +/- 0.21
+
+#### BACKTEST ####
+
+# Signals
+
+signal2 <- ifelse(test_pred$STX500e > 0, 1, 
+                 ifelse(test_pred$STX500e < 0, -1, 0)
+                 )
+colnames(signal) <- c("signal")
+
+action1 <- ifelse(signal$signal == 1, "BUY", 
+                  ifelse(signal$signal == -1, "SELL", "HOLD"))
+colnames(action1) <- c("action1")
+
+action2 <- ifelse(action1$action1 == "BUY" & lag(action1$action1) == "SELL", "BUY",
+                  ifelse(action1$action1 == "SELL" & lag(action1$action1) == "BUY", "SELL",
+                         "HOLD"))
+colnames(action2) <- c("action2")
+
+signal2 <- ifelse(action2$action2 == "BUY", 1, 
+                  ifelse(action2$action2 == "SELL", -1, NA))
+colnames(signal2) <- c("signal2")
+
+signals_df <- cbind(as.data.frame(signal), as.data.frame(action1), 
+                    as.data.frame(action2), as.data.frame(signal2))
+
+# We still need to include transaction costs @ 0.025%
+
+# performance
+
+p_signal <- ifelse(test_pred$STX500e > 0, 1, 0)
+colnames(p_signal) <- c("pos_signal")
+  
+  
+
+pos <- Test_set$STX500*p_signal
+colnames(pos) <- c("position")
+
+backtest_perf <- cbind(Test_set$STX500, p_signal, pos)
+
+cum_bt_perf <- cumprod(1 + backtest_perf$position) - 1
+cum_STX_perf <- cumprod(1 + Test_set$STX500) - 1
+
+ggplot() +
+  geom_line(data = cum_STX_perf, mapping = aes(x = index(cum_STX_perf), y = STX500, col = "STX500"), linewidth = 0.75) + 
+  geom_line(data = cum_bt_perf, mapping = aes(x = index(cum_bt_perf), y = position, col = "Neural Net"), linewidth = 0.75) +
+  scale_color_manual(values = c("STX500" = "black", "Neural Net" = "red")) +
+  labs(title = "Neural Net vs Buy and Hold (exclusive of transaction costs)", x = "Time", y = "Cumulative Return") +
+  theme_classic()
+
+# It is still relatively successful

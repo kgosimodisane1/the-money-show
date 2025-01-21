@@ -545,3 +545,26 @@ ggplot() +
   theme_classic()
 
 # It is still relatively successful
+
+#### BACKTEST incl. TX COSTS ####
+
+tx_cost <- 0.0025
+
+pos_tx <- ifelse(backtest_perf$pos_signal != lag(backtest_perf$pos_signal),
+                        backtest_perf$position - tx_cost,
+                        backtest_perf)
+colnames(pos_tx) <- c("pos_tx")
+
+pos_tx[1, 1] <- ifelse(backtest_perf$pos_signal[1, 1] == 1, 
+                      backtest_perf$position[1, 1] - tx_cost, 0)
+
+backtest_perf <- cbind(backtest_perf, pos_tx)
+
+cum_bt_perf_tx <- cumprod(1 + backtest_perf$pos_tx) - 1
+
+ggplot() +
+  geom_line(data = cum_STX_perf, mapping = aes(x = index(cum_STX_perf), y = STX500, col = "STX500"), linewidth = 0.75) + 
+  geom_line(data = cum_bt_perf_tx, mapping = aes(x = index(cum_bt_perf_tx), y = pos_tx, col = "Neural Net"), linewidth = 0.75) +
+  scale_color_manual(values = c("STX500" = "black", "Neural Net" = "red")) +
+  labs(title = "Neural Net vs Buy and Hold (including transaction costs)", x = "Time", y = "Cumulative Return") +
+  theme_classic()
